@@ -194,7 +194,14 @@ begin
 
   return 'Q-' || yr || '-' || lpad(next_num::text, 4, '0');
 end;
-$$ language plpgsql;
+$$ language plpgsql security definer set search_path = public;
+
+alter table quote_number_counters enable row level security;
+
+do $$ begin
+  create policy "authenticated_full_access" on quote_number_counters
+    for all to authenticated using (true) with check (true);
+exception when duplicate_object then null; end $$;
 
 -- ============================================================================
 -- QUOTES (core entity — a quote IS an event; status carries it through the

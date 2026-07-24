@@ -96,6 +96,10 @@ export function QuoteBuilderShell({
           return;
         }
         clientId = result.client.id;
+        // Persist the newly created client's id immediately so that if the
+        // quote save below fails, a retry updates this client instead of
+        // creating a duplicate.
+        setDraft((d) => ({ ...d, client: { ...d.client, id: clientId! } }));
       } else {
         const result = await updateClientRecord(clientId, clientInput);
         if (result.error) {
