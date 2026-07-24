@@ -18,49 +18,45 @@ export function SetPasswordForm() {
 
   useEffect(() => {
     const supabase = createClient();
-    let resolved = false;
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session && !resolved) {
-        resolved = true;
-        setStatus("ready");
-      }
-    });
 
     (async () => {
+      // Custom email templates can send a query-param style link
+      // (?token_hash=...&type=...).
       const tokenHash = searchParams.get("token_hash");
       const type = searchParams.get("type");
-
       if (tokenHash && type) {
         const { error: verifyError } = await supabase.auth.verifyOtp({
           token_hash: tokenHash,
           type: type as "invite" | "recovery" | "email",
         });
-        if (resolved) return;
-        if (verifyError) {
-          setStatus("invalid");
-        } else {
-          resolved = true;
-          setStatus("ready");
-        }
+        setStatus(verifyError ? "invalid" : "ready");
         return;
       }
 
-      // No query-based token: give the client library a moment to process
-      // an implicit-flow hash fragment (#access_token=...) automatically.
-      setTimeout(async () => {
-        if (resolved) return;
-        const { data } = await supabase.auth.getSession();
-        if (data.session) {
-          resolved = true;
-          setStatus("ready");
-        } else {
-          setStatus("invalid");
+      // Supabase's default invite/recovery links redirect with the session
+      // in a URL hash fragment (#access_token=...&refresh_token=...). The
+      // browser client here is configured for the PKCE flow (via
+      // @supabase/ssr), which does not auto-detect this implicit-style
+      // fragment, so it has to be parsed and applied manually.
+      if (window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          window.history.replaceState(null, "", window.location.pathname);
+          setStatus(sessionError ? "invalid" : "ready");
+          return;
         }
-      }, 1000);
-    })();
+      }
 
-    return () => sub.subscription.unsubscribe();
+      // Fallback: maybe a session already exists from a previous step.
+      const { data } = await supabase.auth.getSession();
+      setStatus(data.session ? "ready" : "invalid");
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
