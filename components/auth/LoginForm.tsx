@@ -4,7 +4,9 @@ import { useActionState } from "react";
 import { signIn } from "@/actions/auth";
 
 export function LoginForm() {
-  const [state, formAction, pending] = useActionState(signIn, { error: null });
+  const [state, formAction, pending] = useActionState<{ error: string | null }, FormData>(signIn, {
+    error: null,
+  });
 
   return (
     <form action={formAction} className="w-full max-w-sm space-y-5">
