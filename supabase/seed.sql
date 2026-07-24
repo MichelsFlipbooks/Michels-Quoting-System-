@@ -102,7 +102,7 @@ with pkg as (
   returning id
 )
 insert into package_menu_selections (package_id, catalogue_item_id, is_optional_addon, sort_order)
-select pkg.id, ci.id, false, ci.ordinal
+select pkg.id, ci.id, false, sel.ordinal
 from pkg,
   (values
     ('Smoked Salmon Blini', 1),
