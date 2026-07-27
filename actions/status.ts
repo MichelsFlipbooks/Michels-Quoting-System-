@@ -17,8 +17,9 @@ export async function changeQuoteStatus(
   quoteId: string,
   newStatus: QuoteStatus,
   reason: string | null,
+  categoryReason: string | null = null,
 ): Promise<{ quote?: Quote; error?: string }> {
-  if (STATUSES_REQUIRING_REASON.includes(newStatus) && !reason?.trim()) {
+  if (STATUSES_REQUIRING_REASON.includes(newStatus) && (!reason?.trim() || !categoryReason)) {
     return { error: "A reason is required to mark a quote as Rejected or Cancelled." };
   }
 
@@ -29,13 +30,25 @@ export async function changeQuoteStatus(
 
   const { data: previous } = await supabase
     .from("quotes")
-    .select("status")
+    .select("status, confirmed_at, cancelled_at")
     .eq("id", quoteId)
     .single();
 
+  const today = new Date().toISOString().slice(0, 10);
+  const updateFields: Record<string, unknown> = { status: newStatus, status_reason: reason };
+
+  if (newStatus === "rejected") {
+    updateFields.lost_reason = categoryReason;
+  } else if (newStatus === "cancelled") {
+    updateFields.cancellation_reason = categoryReason;
+    if (!previous?.cancelled_at) updateFields.cancelled_at = today;
+  } else if (newStatus === "confirmed" && !previous?.confirmed_at) {
+    updateFields.confirmed_at = today;
+  }
+
   const { data, error } = await supabase
     .from("quotes")
-    .update({ status: newStatus, status_reason: reason })
+    .update(updateFields)
     .eq("id", quoteId)
     .select("*")
     .single();
@@ -46,6 +59,7 @@ export async function changeQuoteStatus(
     previous_status: previous?.status ?? null,
     new_status: newStatus,
     reason,
+    category_reason: categoryReason,
   });
 
   revalidatePath(`/quotes/${quoteId}`);

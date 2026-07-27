@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { listCatalogueItems, listDietaryRequirements, listPackagesWithSelections } from "@/lib/queries";
+import { listStaffMembers } from "@/actions/staff";
 import { QuoteBuilderShell } from "@/components/quote-builder/QuoteBuilderShell";
 import { createEmptyDraft } from "@/components/quote-builder/state";
 import type { Client } from "@/lib/types";
@@ -11,10 +12,11 @@ export default async function NewQuotePage({
 }) {
   const { clientId } = await searchParams;
 
-  const [catalogueItems, packages, dietaryOptions] = await Promise.all([
+  const [catalogueItems, packages, dietaryOptions, staffMembers] = await Promise.all([
     listCatalogueItems(),
     listPackagesWithSelections(),
     listDietaryRequirements(),
+    listStaffMembers(),
   ]);
 
   let initialClient: Client | null = null;
@@ -32,6 +34,7 @@ export default async function NewQuotePage({
       catalogueItems={catalogueItems}
       packages={packages}
       dietaryOptions={dietaryOptions}
+      staffMembers={staffMembers}
     />
   );
 }

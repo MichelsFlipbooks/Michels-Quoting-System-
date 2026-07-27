@@ -1,4 +1,10 @@
-import type { GstStatus, LineItemSection, MoneyAdjustmentType, QuoteStatus } from "@/lib/constants";
+import type {
+  DepositRetentionOption,
+  GstStatus,
+  LineItemSection,
+  MoneyAdjustmentType,
+  QuoteStatus,
+} from "@/lib/constants";
 import type { Client, EventTimelineItem, Quote, QuoteDietaryRequirement, QuoteLineItem } from "@/lib/types";
 
 export interface DraftLineItem {
@@ -54,6 +60,9 @@ export interface QuoteDraft {
   guestNumbers: number | null;
   eventContactName: string;
   eventContactPhone: string;
+  eventContactEmail: string;
+  eventContactRole: string;
+  eventContactSameAsClient: boolean;
   accessNotes: string;
   parkingLoadingDetails: string;
   kitchenFacilities: string;
@@ -68,6 +77,63 @@ export interface QuoteDraft {
   quoteDate: string;
   expiryDate: string;
   nextFollowUpDate: string;
+
+  // Venue / Google Maps
+  venuePlaceId: string;
+  venueLat: number | null;
+  venueLng: number | null;
+  venueStreetAddress: string;
+  venueSuburb: string;
+  venueState: string;
+  venuePostcode: string;
+  venueTravelDistanceKm: number | null;
+  venueTravelDurationMinutes: number | null;
+
+  // Delivery & Travel logistics
+  deliveryRegion: string;
+  deliveryDate: string;
+  requiredArrivalTime: string;
+  deliveryWindowStart: string;
+  deliveryWindowEnd: string;
+  returnTravelDurationMinutes: number | null;
+  vehicleCount: number | null;
+  vehicleType: string;
+  driverRequired: boolean;
+  fuelTravelChargeCents: number | null;
+  accommodationRequired: boolean;
+  overnightTravelRequired: boolean;
+  ferryTollParkingCostCents: number | null;
+  regionalSurchargeCents: number | null;
+  staffTravelTimeMinutes: number | null;
+  deliveryNotes: string;
+
+  // Enquiry / BDM tracking
+  enquirySource: string;
+  assignedStaffId: string | null;
+  quoteDueDate: string;
+  lastClientContactDate: string;
+  nextAction: string;
+  estimatedEventValueCents: number | null;
+  confirmationProbability: number | null;
+
+  // Confirmed-stage checklist
+  confirmedAt: string;
+  depositDueDate: string;
+  depositReceivedAt: string;
+  contractAcceptedAt: string;
+  finalGuestCountDueDate: string;
+  finalPaymentDueDate: string;
+
+  // Lost tracking
+  lostReason: string;
+
+  // Cancelled tracking
+  cancelledAt: string;
+  cancelledBy: string;
+  cancellationReason: string;
+  cancellationFeeChargedCents: number | null;
+  depositRetainedOrRefunded: DepositRetentionOption | null;
+  refundAmountCents: number | null;
 
   lineItems: DraftLineItem[];
   dietaryRequirements: DraftDietary[];
@@ -140,6 +206,9 @@ export function createEmptyDraft(initialClient: Client | null): QuoteDraft {
     guestNumbers: null,
     eventContactName: "",
     eventContactPhone: "",
+    eventContactEmail: "",
+    eventContactRole: "",
+    eventContactSameAsClient: false,
     accessNotes: "",
     parkingLoadingDetails: "",
     kitchenFacilities: "",
@@ -153,6 +222,51 @@ export function createEmptyDraft(initialClient: Client | null): QuoteDraft {
     quoteDate: todayISO(),
     expiryDate: "",
     nextFollowUpDate: "",
+    venuePlaceId: "",
+    venueLat: null,
+    venueLng: null,
+    venueStreetAddress: "",
+    venueSuburb: "",
+    venueState: "",
+    venuePostcode: "",
+    venueTravelDistanceKm: null,
+    venueTravelDurationMinutes: null,
+    deliveryRegion: "",
+    deliveryDate: "",
+    requiredArrivalTime: "",
+    deliveryWindowStart: "",
+    deliveryWindowEnd: "",
+    returnTravelDurationMinutes: null,
+    vehicleCount: null,
+    vehicleType: "",
+    driverRequired: false,
+    fuelTravelChargeCents: null,
+    accommodationRequired: false,
+    overnightTravelRequired: false,
+    ferryTollParkingCostCents: null,
+    regionalSurchargeCents: null,
+    staffTravelTimeMinutes: null,
+    deliveryNotes: "",
+    enquirySource: "",
+    assignedStaffId: null,
+    quoteDueDate: "",
+    lastClientContactDate: "",
+    nextAction: "",
+    estimatedEventValueCents: null,
+    confirmationProbability: null,
+    confirmedAt: "",
+    depositDueDate: "",
+    depositReceivedAt: "",
+    contractAcceptedAt: "",
+    finalGuestCountDueDate: "",
+    finalPaymentDueDate: "",
+    lostReason: "",
+    cancelledAt: "",
+    cancelledBy: "",
+    cancellationReason: "",
+    cancellationFeeChargedCents: null,
+    depositRetainedOrRefunded: null,
+    refundAmountCents: null,
     lineItems: [],
     dietaryRequirements: [],
     timelineItems: [],
@@ -184,6 +298,9 @@ export function draftFromExisting(
     guestNumbers: quote.guest_numbers,
     eventContactName: quote.event_contact_name ?? "",
     eventContactPhone: quote.event_contact_phone ?? "",
+    eventContactEmail: quote.event_contact_email ?? "",
+    eventContactRole: quote.event_contact_role ?? "",
+    eventContactSameAsClient: quote.event_contact_same_as_client,
     accessNotes: quote.access_notes ?? "",
     parkingLoadingDetails: quote.parking_loading_details ?? "",
     kitchenFacilities: quote.kitchen_facilities ?? "",
@@ -197,6 +314,51 @@ export function draftFromExisting(
     quoteDate: quote.quote_date,
     expiryDate: quote.expiry_date ?? "",
     nextFollowUpDate: quote.next_follow_up_date ?? "",
+    venuePlaceId: quote.venue_place_id ?? "",
+    venueLat: quote.venue_lat,
+    venueLng: quote.venue_lng,
+    venueStreetAddress: quote.venue_street_address ?? "",
+    venueSuburb: quote.venue_suburb ?? "",
+    venueState: quote.venue_state ?? "",
+    venuePostcode: quote.venue_postcode ?? "",
+    venueTravelDistanceKm: quote.venue_travel_distance_km,
+    venueTravelDurationMinutes: quote.venue_travel_duration_minutes,
+    deliveryRegion: quote.delivery_region ?? "",
+    deliveryDate: quote.delivery_date ?? "",
+    requiredArrivalTime: quote.required_arrival_time ?? "",
+    deliveryWindowStart: quote.delivery_window_start ?? "",
+    deliveryWindowEnd: quote.delivery_window_end ?? "",
+    returnTravelDurationMinutes: quote.return_travel_duration_minutes,
+    vehicleCount: quote.vehicle_count,
+    vehicleType: quote.vehicle_type ?? "",
+    driverRequired: quote.driver_required,
+    fuelTravelChargeCents: quote.fuel_travel_charge_cents,
+    accommodationRequired: quote.accommodation_required,
+    overnightTravelRequired: quote.overnight_travel_required,
+    ferryTollParkingCostCents: quote.ferry_toll_parking_cost_cents,
+    regionalSurchargeCents: quote.regional_surcharge_cents,
+    staffTravelTimeMinutes: quote.staff_travel_time_minutes,
+    deliveryNotes: quote.delivery_notes ?? "",
+    enquirySource: quote.enquiry_source ?? "",
+    assignedStaffId: quote.assigned_staff_id,
+    quoteDueDate: quote.quote_due_date ?? "",
+    lastClientContactDate: quote.last_client_contact_date ?? "",
+    nextAction: quote.next_action ?? "",
+    estimatedEventValueCents: quote.estimated_event_value_cents,
+    confirmationProbability: quote.confirmation_probability,
+    confirmedAt: quote.confirmed_at ?? "",
+    depositDueDate: quote.deposit_due_date ?? "",
+    depositReceivedAt: quote.deposit_received_at ?? "",
+    contractAcceptedAt: quote.contract_accepted_at ?? "",
+    finalGuestCountDueDate: quote.final_guest_count_due_date ?? "",
+    finalPaymentDueDate: quote.final_payment_due_date ?? "",
+    lostReason: quote.lost_reason ?? "",
+    cancelledAt: quote.cancelled_at ?? "",
+    cancelledBy: quote.cancelled_by ?? "",
+    cancellationReason: quote.cancellation_reason ?? "",
+    cancellationFeeChargedCents: quote.cancellation_fee_charged_cents,
+    depositRetainedOrRefunded: quote.deposit_retained_or_refunded,
+    refundAmountCents: quote.refund_amount_cents,
     lineItems: lineItems
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((li) => ({

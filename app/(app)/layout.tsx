@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/actions/auth";
 import { NavLink } from "@/components/ui/NavLink";
+import { SidebarCalendarWidget } from "@/components/dashboard/SidebarCalendarWidget";
+import { listCalendarEvents } from "@/lib/queries";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -21,9 +23,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .eq("id", user.id)
     .maybeSingle();
 
+  const calendarEvents = await listCalendarEvents();
+
   return (
     <div className="flex min-h-screen flex-1">
-      <aside className="flex w-60 shrink-0 flex-col bg-navy-dark px-4 py-6">
+      <aside className="flex w-60 shrink-0 flex-col overflow-y-auto bg-navy-dark px-4 py-6">
         <div className="mb-8 px-2">
           <Image src="/brand/michels-logo-white.png" alt="Michels Catering & Events" width={160} height={58} priority />
         </div>
@@ -35,13 +39,17 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           + New Quote
         </Link>
 
-        <nav className="flex flex-col gap-1">
+        <nav className="mb-6 flex flex-col gap-1">
           <NavLink href="/" exact>
             Dashboard
           </NavLink>
           <NavLink href="/clients">Clients</NavLink>
           <NavLink href="/archive">Archive</NavLink>
+          <NavLink href="/reports">Reports</NavLink>
+          <NavLink href="/staff">Staff</NavLink>
         </nav>
+
+        <SidebarCalendarWidget events={calendarEvents} />
 
         <div className="mt-auto space-y-3 border-t border-white/10 pt-4">
           <p className="px-2 text-xs text-white/60">Signed in as</p>

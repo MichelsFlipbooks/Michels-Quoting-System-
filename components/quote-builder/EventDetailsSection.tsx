@@ -147,11 +147,25 @@ export function EventDetailsSection({
           />
         </Field>
 
+        <div className="col-span-full flex items-center gap-2 rounded-md border border-border-soft bg-cream p-3">
+          <input
+            type="checkbox"
+            id="event-contact-same-as-client"
+            checked={draft.eventContactSameAsClient}
+            onChange={(e) => onChange({ eventContactSameAsClient: e.target.checked })}
+            className="h-4 w-4 accent-copper"
+          />
+          <label htmlFor="event-contact-same-as-client" className="text-sm font-medium text-navy-dark">
+            Event contact is the same as the client contact
+          </label>
+        </div>
+
         <Field label="Event Contact Name">
           <input
             type="text"
             className={inputClass}
-            value={draft.eventContactName}
+            disabled={draft.eventContactSameAsClient}
+            value={draft.eventContactSameAsClient ? draft.client.contact_name : draft.eventContactName}
             onChange={(e) => onChange({ eventContactName: e.target.value })}
           />
         </Field>
@@ -160,8 +174,29 @@ export function EventDetailsSection({
           <input
             type="tel"
             className={inputClass}
-            value={draft.eventContactPhone}
+            disabled={draft.eventContactSameAsClient}
+            value={draft.eventContactSameAsClient ? draft.client.phone ?? "" : draft.eventContactPhone}
             onChange={(e) => onChange({ eventContactPhone: e.target.value })}
+          />
+        </Field>
+
+        <Field label="Event Contact Email">
+          <input
+            type="email"
+            className={inputClass}
+            disabled={draft.eventContactSameAsClient}
+            value={draft.eventContactSameAsClient ? draft.client.email ?? "" : draft.eventContactEmail}
+            onChange={(e) => onChange({ eventContactEmail: e.target.value })}
+          />
+        </Field>
+
+        <Field label="Event Contact Role at Event">
+          <input
+            type="text"
+            className={inputClass}
+            placeholder="e.g. Bride, Venue Coordinator, HR Manager"
+            value={draft.eventContactRole}
+            onChange={(e) => onChange({ eventContactRole: e.target.value })}
           />
         </Field>
 

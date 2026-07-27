@@ -7,9 +7,10 @@ import { createClientRecord, updateClientRecord } from "@/actions/clients";
 import { saveQuoteDraft } from "@/actions/quotes";
 import { issueQuoteVersion } from "@/actions/versions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { CatalogueItem, Client, DietaryRequirement } from "@/lib/types";
+import type { CatalogueItem, Client, DietaryRequirement, StaffMember } from "@/lib/types";
 import type { PackageWithSelections } from "@/lib/queries";
 import { CustomerSection } from "./CustomerSection";
+import { DeliveryTravelSection } from "./DeliveryTravelSection";
 import { EventDetailsSection } from "./EventDetailsSection";
 import { LineItemSection } from "./LineItemSection";
 import { PackagePicker } from "./PackagePicker";
@@ -17,6 +18,7 @@ import { StaffingSection } from "./StaffingSection";
 import { SummarySection } from "./SummarySection";
 import { NotesSection } from "./NotesSection";
 import { StatusChangeControl } from "./StatusChangeControl";
+import { TrackingSection } from "./TrackingSection";
 import type { QuoteDraft } from "./state";
 
 const TABS = [
@@ -29,6 +31,7 @@ const TABS = [
   "Delivery & Travel",
   "Additional Charges",
   "Summary",
+  "Tracking",
   "Internal Notes",
   "Client Notes",
 ] as const;
@@ -38,11 +41,13 @@ export function QuoteBuilderShell({
   catalogueItems,
   packages,
   dietaryOptions,
+  staffMembers,
 }: {
   initialDraft: QuoteDraft;
   catalogueItems: CatalogueItem[];
   packages: PackageWithSelections[];
   dietaryOptions: DietaryRequirement[];
+  staffMembers: StaffMember[];
 }) {
   const [draft, setDraft] = useState<QuoteDraft>(initialDraft);
   const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Customer");
@@ -120,8 +125,20 @@ export function QuoteBuilderShell({
         venueName: draft.venueName || null,
         venueAddress: draft.venueAddress || null,
         guestNumbers: draft.guestNumbers,
-        eventContactName: draft.eventContactName || null,
-        eventContactPhone: draft.eventContactPhone || null,
+        // When linked to the client contact, always re-copy the latest client
+        // fields at save time so the quote row stays self-contained for the
+        // PDF/kitchen-copy renderers.
+        eventContactName: draft.eventContactSameAsClient
+          ? draft.client.contact_name || null
+          : draft.eventContactName || null,
+        eventContactPhone: draft.eventContactSameAsClient
+          ? draft.client.phone || null
+          : draft.eventContactPhone || null,
+        eventContactEmail: draft.eventContactSameAsClient
+          ? draft.client.email || null
+          : draft.eventContactEmail || null,
+        eventContactRole: draft.eventContactRole || null,
+        eventContactSameAsClient: draft.eventContactSameAsClient,
         accessNotes: draft.accessNotes || null,
         parkingLoadingDetails: draft.parkingLoadingDetails || null,
         kitchenFacilities: draft.kitchenFacilities || null,
@@ -135,6 +152,58 @@ export function QuoteBuilderShell({
         quoteDate: draft.quoteDate,
         expiryDate: draft.expiryDate || null,
         nextFollowUpDate: draft.nextFollowUpDate || null,
+
+        venuePlaceId: draft.venuePlaceId || null,
+        venueLat: draft.venueLat,
+        venueLng: draft.venueLng,
+        venueStreetAddress: draft.venueStreetAddress || null,
+        venueSuburb: draft.venueSuburb || null,
+        venueState: draft.venueState || null,
+        venuePostcode: draft.venuePostcode || null,
+        venueTravelDistanceKm: draft.venueTravelDistanceKm,
+        venueTravelDurationMinutes: draft.venueTravelDurationMinutes,
+
+        deliveryRegion: draft.deliveryRegion || null,
+        deliveryDate: draft.deliveryDate || null,
+        requiredArrivalTime: draft.requiredArrivalTime || null,
+        deliveryWindowStart: draft.deliveryWindowStart || null,
+        deliveryWindowEnd: draft.deliveryWindowEnd || null,
+        returnTravelDurationMinutes: draft.returnTravelDurationMinutes,
+        vehicleCount: draft.vehicleCount,
+        vehicleType: draft.vehicleType || null,
+        driverRequired: draft.driverRequired,
+        fuelTravelChargeCents: draft.fuelTravelChargeCents,
+        accommodationRequired: draft.accommodationRequired,
+        overnightTravelRequired: draft.overnightTravelRequired,
+        ferryTollParkingCostCents: draft.ferryTollParkingCostCents,
+        regionalSurchargeCents: draft.regionalSurchargeCents,
+        staffTravelTimeMinutes: draft.staffTravelTimeMinutes,
+        deliveryNotes: draft.deliveryNotes || null,
+
+        enquirySource: draft.enquirySource || null,
+        assignedStaffId: draft.assignedStaffId,
+        quoteDueDate: draft.quoteDueDate || null,
+        lastClientContactDate: draft.lastClientContactDate || null,
+        nextAction: draft.nextAction || null,
+        estimatedEventValueCents: draft.estimatedEventValueCents,
+        confirmationProbability: draft.confirmationProbability,
+
+        confirmedAt: draft.confirmedAt || null,
+        depositDueDate: draft.depositDueDate || null,
+        depositReceivedAt: draft.depositReceivedAt || null,
+        contractAcceptedAt: draft.contractAcceptedAt || null,
+        finalGuestCountDueDate: draft.finalGuestCountDueDate || null,
+        finalPaymentDueDate: draft.finalPaymentDueDate || null,
+
+        lostReason: draft.lostReason || null,
+
+        cancelledAt: draft.cancelledAt || null,
+        cancelledBy: draft.cancelledBy || null,
+        cancellationReason: draft.cancellationReason || null,
+        cancellationFeeChargedCents: draft.cancellationFeeChargedCents,
+        depositRetainedOrRefunded: draft.depositRetainedOrRefunded,
+        refundAmountCents: draft.refundAmountCents,
+
         lineItems: draft.lineItems.map((li) => ({
           section: li.section,
           line_type: li.line_type,
@@ -347,13 +416,18 @@ export function QuoteBuilderShell({
       )}
 
       {activeTab === "Delivery & Travel" && (
-        <div className="rounded-xl border border-border-soft bg-white p-6 shadow-sm">
-          <LineItemSection
-            section="delivery_travel"
-            lineItems={draft.lineItems}
-            catalogueItems={catalogueItems}
-            onChange={setLineItems}
-          />
+        <div className="space-y-6">
+          <DeliveryTravelSection draft={draft} onChange={patch} />
+          <div className="rounded-xl border border-border-soft bg-white p-6 shadow-sm">
+            <LineItemSection
+              section="delivery_travel"
+              lineItems={draft.lineItems}
+              catalogueItems={catalogueItems}
+              onChange={setLineItems}
+              title="Delivery & Travel Charges"
+              helperText="Add priced lines here (e.g. Local Delivery Fee, Remote Delivery Fee) — these feed the quote total."
+            />
+          </div>
         </div>
       )}
 
@@ -369,6 +443,10 @@ export function QuoteBuilderShell({
       )}
 
       {activeTab === "Summary" && <SummarySection draft={draft} onChange={patch} />}
+
+      {activeTab === "Tracking" && (
+        <TrackingSection draft={draft} onChange={patch} staffMembers={staffMembers} />
+      )}
 
       {activeTab === "Internal Notes" && (
         <NotesSection

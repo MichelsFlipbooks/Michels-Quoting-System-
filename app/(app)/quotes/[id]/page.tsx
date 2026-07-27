@@ -5,17 +5,19 @@ import {
   listDietaryRequirements,
   listPackagesWithSelections,
 } from "@/lib/queries";
+import { listStaffMembers } from "@/actions/staff";
 import { QuoteBuilderShell } from "@/components/quote-builder/QuoteBuilderShell";
 import { draftFromExisting } from "@/components/quote-builder/state";
 
 export default async function EditQuotePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [quoteData, catalogueItems, packages, dietaryOptions] = await Promise.all([
+  const [quoteData, catalogueItems, packages, dietaryOptions, staffMembers] = await Promise.all([
     getQuoteForBuilder(id),
     listCatalogueItems(),
     listPackagesWithSelections(),
     listDietaryRequirements(),
+    listStaffMembers(true),
   ]);
 
   if (!quoteData) notFound();
@@ -34,6 +36,7 @@ export default async function EditQuotePage({ params }: { params: Promise<{ id: 
       catalogueItems={catalogueItems}
       packages={packages}
       dietaryOptions={dietaryOptions}
+      staffMembers={staffMembers}
     />
   );
 }

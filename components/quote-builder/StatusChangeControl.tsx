@@ -2,7 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { changeQuoteStatus } from "@/actions/status";
-import { QUOTE_STATUSES, QUOTE_STATUS_LABELS, STATUSES_REQUIRING_REASON, type QuoteStatus } from "@/lib/constants";
+import {
+  CANCELLATION_REASONS,
+  LOST_REASONS,
+  QUOTE_STATUSES,
+  QUOTE_STATUS_LABELS,
+  STATUSES_REQUIRING_REASON,
+  type QuoteStatus,
+} from "@/lib/constants";
 
 export function StatusChangeControl({
   quoteId,
@@ -14,6 +21,7 @@ export function StatusChangeControl({
   onChanged: (status: QuoteStatus) => void;
 }) {
   const [pendingStatus, setPendingStatus] = useState<QuoteStatus | null>(null);
+  const [categoryReason, setCategoryReason] = useState("");
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -22,17 +30,18 @@ export function StatusChangeControl({
     if (!quoteId) return;
     if (STATUSES_REQUIRING_REASON.includes(newStatus)) {
       setPendingStatus(newStatus);
+      setCategoryReason("");
       setReason("");
       setError(null);
       return;
     }
-    submit(newStatus, null);
+    submit(newStatus, null, null);
   }
 
-  function submit(newStatus: QuoteStatus, statusReason: string | null) {
+  function submit(newStatus: QuoteStatus, statusReason: string | null, category: string | null) {
     if (!quoteId) return;
     startTransition(async () => {
-      const result = await changeQuoteStatus(quoteId, newStatus, statusReason);
+      const result = await changeQuoteStatus(quoteId, newStatus, statusReason, category);
       if (result.error) {
         setError(result.error);
         return;
@@ -41,6 +50,8 @@ export function StatusChangeControl({
       setPendingStatus(null);
     });
   }
+
+  const reasonOptions = pendingStatus === "rejected" ? LOST_REASONS : CANCELLATION_REASONS;
 
   return (
     <div className="flex items-center gap-2">
@@ -65,15 +76,31 @@ export function StatusChangeControl({
               Mark quote as {QUOTE_STATUS_LABELS[pendingStatus]}
             </h3>
             <p className="mb-3 text-sm text-navy-dark/70">
-              Please provide a reason — this is recorded on the quote's audit history.
+              Please select a reason and add any further detail — this is recorded on the quote's audit history.
             </p>
+
+            <label className="mb-1 block text-sm font-medium text-navy-dark">Reason</label>
+            <select
+              className="mb-3 w-full rounded-md border border-border-soft px-3 py-2 text-sm shadow-sm focus:border-copper focus:outline-none focus:ring-1 focus:ring-copper"
+              value={categoryReason}
+              onChange={(e) => setCategoryReason(e.target.value)}
+            >
+              <option value="">Select a reason…</option>
+              {reasonOptions.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+
+            <label className="mb-1 block text-sm font-medium text-navy-dark">Further Details</label>
             <textarea
               autoFocus
               className="mb-3 w-full rounded-md border border-border-soft px-3 py-2 text-sm shadow-sm focus:border-copper focus:outline-none focus:ring-1 focus:ring-copper"
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="e.g. Client chose another caterer"
+              placeholder="Any further detail…"
             />
             {error && <p className="mb-2 text-sm text-red-700">{error}</p>}
             <div className="flex justify-end gap-2">
@@ -86,8 +113,8 @@ export function StatusChangeControl({
               </button>
               <button
                 type="button"
-                disabled={!reason.trim() || isPending}
-                onClick={() => submit(pendingStatus, reason)}
+                disabled={!reason.trim() || !categoryReason || isPending}
+                onClick={() => submit(pendingStatus, reason, categoryReason)}
                 className="rounded-md bg-navy px-3 py-1.5 text-sm font-medium text-white disabled:opacity-40"
               >
                 Confirm

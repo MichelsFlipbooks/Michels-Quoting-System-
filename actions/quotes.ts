@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
-import type { GstStatus, LineItemSection, MoneyAdjustmentType } from "@/lib/constants";
+import type { DepositRetentionOption, GstStatus, LineItemSection, MoneyAdjustmentType } from "@/lib/constants";
 import type { Quote } from "@/lib/types";
 
 export interface SaveLineItemInput {
@@ -50,6 +50,9 @@ export interface SaveQuoteInput {
   guestNumbers: number | null;
   eventContactName: string | null;
   eventContactPhone: string | null;
+  eventContactEmail: string | null;
+  eventContactRole: string | null;
+  eventContactSameAsClient: boolean;
   accessNotes: string | null;
   parkingLoadingDetails: string | null;
   kitchenFacilities: string | null;
@@ -63,6 +66,58 @@ export interface SaveQuoteInput {
   quoteDate: string;
   expiryDate: string | null;
   nextFollowUpDate: string | null;
+
+  venuePlaceId: string | null;
+  venueLat: number | null;
+  venueLng: number | null;
+  venueStreetAddress: string | null;
+  venueSuburb: string | null;
+  venueState: string | null;
+  venuePostcode: string | null;
+  venueTravelDistanceKm: number | null;
+  venueTravelDurationMinutes: number | null;
+
+  deliveryRegion: string | null;
+  deliveryDate: string | null;
+  requiredArrivalTime: string | null;
+  deliveryWindowStart: string | null;
+  deliveryWindowEnd: string | null;
+  returnTravelDurationMinutes: number | null;
+  vehicleCount: number | null;
+  vehicleType: string | null;
+  driverRequired: boolean;
+  fuelTravelChargeCents: number | null;
+  accommodationRequired: boolean;
+  overnightTravelRequired: boolean;
+  ferryTollParkingCostCents: number | null;
+  regionalSurchargeCents: number | null;
+  staffTravelTimeMinutes: number | null;
+  deliveryNotes: string | null;
+
+  enquirySource: string | null;
+  assignedStaffId: string | null;
+  quoteDueDate: string | null;
+  lastClientContactDate: string | null;
+  nextAction: string | null;
+  estimatedEventValueCents: number | null;
+  confirmationProbability: number | null;
+
+  confirmedAt: string | null;
+  depositDueDate: string | null;
+  depositReceivedAt: string | null;
+  contractAcceptedAt: string | null;
+  finalGuestCountDueDate: string | null;
+  finalPaymentDueDate: string | null;
+
+  lostReason: string | null;
+
+  cancelledAt: string | null;
+  cancelledBy: string | null;
+  cancellationReason: string | null;
+  cancellationFeeChargedCents: number | null;
+  depositRetainedOrRefunded: DepositRetentionOption | null;
+  refundAmountCents: number | null;
+
   lineItems: SaveLineItemInput[];
   dietaryRequirements: SaveDietaryInput[];
   timelineItems: SaveTimelineInput[];
@@ -87,6 +142,9 @@ export async function saveQuoteDraft(input: SaveQuoteInput): Promise<{ quote?: Q
     guest_numbers: input.guestNumbers,
     event_contact_name: input.eventContactName,
     event_contact_phone: input.eventContactPhone,
+    event_contact_email: input.eventContactEmail,
+    event_contact_role: input.eventContactRole,
+    event_contact_same_as_client: input.eventContactSameAsClient,
     access_notes: input.accessNotes,
     parking_loading_details: input.parkingLoadingDetails,
     kitchen_facilities: input.kitchenFacilities,
@@ -100,6 +158,57 @@ export async function saveQuoteDraft(input: SaveQuoteInput): Promise<{ quote?: Q
     quote_date: input.quoteDate,
     expiry_date: input.expiryDate,
     next_follow_up_date: input.nextFollowUpDate,
+
+    venue_place_id: input.venuePlaceId,
+    venue_lat: input.venueLat,
+    venue_lng: input.venueLng,
+    venue_street_address: input.venueStreetAddress,
+    venue_suburb: input.venueSuburb,
+    venue_state: input.venueState,
+    venue_postcode: input.venuePostcode,
+    venue_travel_distance_km: input.venueTravelDistanceKm,
+    venue_travel_duration_minutes: input.venueTravelDurationMinutes,
+
+    delivery_region: input.deliveryRegion,
+    delivery_date: input.deliveryDate,
+    required_arrival_time: input.requiredArrivalTime,
+    delivery_window_start: input.deliveryWindowStart,
+    delivery_window_end: input.deliveryWindowEnd,
+    return_travel_duration_minutes: input.returnTravelDurationMinutes,
+    vehicle_count: input.vehicleCount,
+    vehicle_type: input.vehicleType,
+    driver_required: input.driverRequired,
+    fuel_travel_charge_cents: input.fuelTravelChargeCents,
+    accommodation_required: input.accommodationRequired,
+    overnight_travel_required: input.overnightTravelRequired,
+    ferry_toll_parking_cost_cents: input.ferryTollParkingCostCents,
+    regional_surcharge_cents: input.regionalSurchargeCents,
+    staff_travel_time_minutes: input.staffTravelTimeMinutes,
+    delivery_notes: input.deliveryNotes,
+
+    enquiry_source: input.enquirySource,
+    assigned_staff_id: input.assignedStaffId,
+    quote_due_date: input.quoteDueDate,
+    last_client_contact_date: input.lastClientContactDate,
+    next_action: input.nextAction,
+    estimated_event_value_cents: input.estimatedEventValueCents,
+    confirmation_probability: input.confirmationProbability,
+
+    confirmed_at: input.confirmedAt,
+    deposit_due_date: input.depositDueDate,
+    deposit_received_at: input.depositReceivedAt,
+    contract_accepted_at: input.contractAcceptedAt,
+    final_guest_count_due_date: input.finalGuestCountDueDate,
+    final_payment_due_date: input.finalPaymentDueDate,
+
+    lost_reason: input.lostReason,
+
+    cancelled_at: input.cancelledAt,
+    cancelled_by: input.cancelledBy,
+    cancellation_reason: input.cancellationReason,
+    cancellation_fee_charged_cents: input.cancellationFeeChargedCents,
+    deposit_retained_or_refunded: input.depositRetainedOrRefunded,
+    refund_amount_cents: input.refundAmountCents,
   };
 
   let quote: Quote;

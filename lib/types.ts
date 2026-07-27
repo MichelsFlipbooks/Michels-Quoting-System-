@@ -1,4 +1,5 @@
 import type {
+  DepositRetentionOption,
   GstStatus,
   LineItemSection,
   MoneyAdjustmentType,
@@ -74,6 +75,16 @@ export interface PackageMenuSelection {
   sort_order: number;
 }
 
+export interface StaffMember {
+  id: string;
+  full_name: string;
+  role_title: string | null;
+  email: string | null;
+  phone: string | null;
+  active: boolean;
+  created_at: string;
+}
+
 export interface Quote {
   id: string;
   quote_number: string;
@@ -94,6 +105,9 @@ export interface Quote {
   guest_numbers: number | null;
   event_contact_name: string | null;
   event_contact_phone: string | null;
+  event_contact_email: string | null;
+  event_contact_role: string | null;
+  event_contact_same_as_client: boolean;
   access_notes: string | null;
   parking_loading_details: string | null;
   kitchen_facilities: string | null;
@@ -109,6 +123,63 @@ export interface Quote {
   quote_date: string;
   expiry_date: string | null;
   current_version_number: number;
+
+  // Venue / Google Maps
+  venue_place_id: string | null;
+  venue_lat: number | null;
+  venue_lng: number | null;
+  venue_street_address: string | null;
+  venue_suburb: string | null;
+  venue_state: string | null;
+  venue_postcode: string | null;
+  venue_travel_distance_km: number | null;
+  venue_travel_duration_minutes: number | null;
+
+  // Delivery & Travel logistics
+  delivery_region: string | null;
+  delivery_date: string | null;
+  required_arrival_time: string | null;
+  delivery_window_start: string | null;
+  delivery_window_end: string | null;
+  return_travel_duration_minutes: number | null;
+  vehicle_count: number | null;
+  vehicle_type: string | null;
+  driver_required: boolean;
+  fuel_travel_charge_cents: number | null;
+  accommodation_required: boolean;
+  overnight_travel_required: boolean;
+  ferry_toll_parking_cost_cents: number | null;
+  regional_surcharge_cents: number | null;
+  staff_travel_time_minutes: number | null;
+  delivery_notes: string | null;
+
+  // Enquiry / BDM tracking
+  enquiry_source: string | null;
+  assigned_staff_id: string | null;
+  quote_due_date: string | null;
+  last_client_contact_date: string | null;
+  next_action: string | null;
+  estimated_event_value_cents: number | null;
+  confirmation_probability: number | null;
+
+  // Confirmed-stage checklist
+  confirmed_at: string | null;
+  deposit_due_date: string | null;
+  deposit_received_at: string | null;
+  contract_accepted_at: string | null;
+  final_guest_count_due_date: string | null;
+  final_payment_due_date: string | null;
+
+  // Lost tracking
+  lost_reason: string | null;
+
+  // Cancelled tracking
+  cancelled_at: string | null;
+  cancelled_by: string | null;
+  cancellation_reason: string | null;
+  cancellation_fee_charged_cents: number | null;
+  deposit_retained_or_refunded: DepositRetentionOption | null;
+  refund_amount_cents: number | null;
 
   created_by: string | null;
   created_at: string;

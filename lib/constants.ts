@@ -123,3 +123,92 @@ export const AUDIT_ACTIONS = [
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
+
+export const ENQUIRY_SOURCES = [
+  "Phone",
+  "Email",
+  "Website",
+  "Referral",
+  "Social Media",
+  "Walk-in",
+  "Other",
+] as const;
+
+export const DELIVERY_REGIONS = [
+  "townsville_local",
+  "burdekin",
+  "ayr",
+  "ingham",
+  "charters_towers",
+  "magnetic_island",
+  "nq_regional",
+  "remote_custom",
+] as const;
+
+export type DeliveryRegion = (typeof DELIVERY_REGIONS)[number];
+
+export const DELIVERY_REGION_LABELS: Record<DeliveryRegion, string> = {
+  townsville_local: "Townsville Local",
+  burdekin: "Burdekin",
+  ayr: "Ayr",
+  ingham: "Ingham",
+  charters_towers: "Charters Towers",
+  magnetic_island: "Magnetic Island",
+  nq_regional: "North Queensland Regional",
+  remote_custom: "Remote / Custom Location",
+};
+
+/** Regions where accommodation/overnight fields are surfaced by default (still editable either way). */
+export const REMOTE_DELIVERY_REGIONS: DeliveryRegion[] = [
+  "charters_towers",
+  "nq_regional",
+  "remote_custom",
+];
+
+export const LOST_REASONS = [
+  "Price",
+  "Minimum spend",
+  "Date unavailable",
+  "Client chose another caterer",
+  "Client stopped responding",
+  "Venue restrictions",
+  "Menu not suitable",
+  "Travel cost",
+  "Outside service area",
+  "Michels declined the event",
+  "Event postponed",
+  "Other",
+] as const;
+
+export const CANCELLATION_REASONS = [
+  "Client cancelled",
+  "Event postponed",
+  "Venue cancelled",
+  "Weather",
+  "Insufficient guest numbers",
+  "Budget changes",
+  "Date changed",
+  "Internal operational issue",
+  "Force majeure",
+  "Other",
+] as const;
+
+export const DEPOSIT_RETENTION_OPTIONS = ["retained", "refunded", "partial"] as const;
+export type DepositRetentionOption = (typeof DEPOSIT_RETENTION_OPTIONS)[number];
+
+export const DEPOSIT_RETENTION_LABELS: Record<DepositRetentionOption, string> = {
+  retained: "Retained",
+  refunded: "Refunded",
+  partial: "Partially Refunded",
+};
+
+export const VEHICLE_TYPE_SUGGESTIONS = [
+  "Van",
+  "Ute",
+  "Refrigerated Van",
+  "Truck",
+  "Trailer",
+] as const;
+
+/** Fixed origin point for every travel-time/distance calculation. */
+export const KITCHEN_ORIGIN_ADDRESS = "100 Hunter Street, Stuart, QLD 4811, Australia";
