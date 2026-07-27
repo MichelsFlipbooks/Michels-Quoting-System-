@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { computeQuoteTotals, type CalcLineItem } from "@/lib/calculations";
+import { formatMonthLabel } from "@/lib/format";
 import {
   ACTIVE_QUOTE_STATUSES,
   ARCHIVE_STATUSES,
@@ -346,6 +347,20 @@ export interface TrackingReport {
   averageDaysToConfirmation: number | null;
 }
 
+/** Chronological (not by-frequency) month breakdown, most recent 12 months. */
+function monthlyBreakdown(dates: (string | null)[]): CountBucket[] {
+  const counts = new Map<string, number>();
+  for (const date of dates) {
+    const key = date?.slice(0, 7);
+    if (!key) continue;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return Array.from(counts.entries())
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .slice(-12)
+    .map(([key, count]) => ({ label: formatMonthLabel(key), count }));
+}
+
 function topN(items: (string | null)[], n = 5): CountBucket[] {
   const counts = new Map<string, number>();
   for (const item of items) {
@@ -422,7 +437,7 @@ export async function getTrackingReport(filters: TrackingReportFilters): Promise
     bySource: topN(rows.map((r) => r.enquiry_source), 10),
     byStaff: topN(rows.map((r) => r.assigned_staff_name), 10),
     byLocation: topN(rows.map((r) => r.delivery_region), 10),
-    byMonth: topN(rows.map((r) => r.event_date?.slice(0, 7) ?? null), 12),
+    byMonth: monthlyBreakdown(rows.map((r) => r.event_date)),
     averageDaysToConfirmation:
       confirmationDurations.length > 0
         ? confirmationDurations.reduce((a, b) => a + b, 0) / confirmationDurations.length

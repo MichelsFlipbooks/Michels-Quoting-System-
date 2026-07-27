@@ -18,8 +18,17 @@ function statusDotClass(status: QuoteStatus): string {
   return "bg-amber-400";
 }
 
+/**
+ * Formats a Date's LOCAL calendar date as "YYYY-MM-DD". Deliberately avoids
+ * toISOString() (which converts to UTC first) — on a machine with a positive
+ * UTC offset (e.g. Australia), that silently shifts local midnight back to
+ * the previous day, making every event appear one day off on the calendar.
+ */
 function toDateKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 export function SidebarCalendarWidget({ events }: { events: CalendarEvent[] }) {
