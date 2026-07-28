@@ -2,8 +2,10 @@
 
 import { Card } from "@/components/ui/Card";
 import { EVENT_TYPES, SERVICE_LEVELS } from "@/lib/constants";
+import { getDistanceFromKitchen } from "@/lib/maps";
 import type { DietaryRequirement } from "@/lib/types";
 import { TimelineEditor } from "./TimelineEditor";
+import { VenueAddressAutocomplete, type ParsedVenueAddress } from "./VenueAddressAutocomplete";
 import type { DraftDietary, DraftTimelineItem, QuoteDraft } from "./state";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -46,6 +48,27 @@ export function EventDetailsSection({
     onDietaryChange(
       draft.dietaryRequirements.map((d) => (d.dietaryRequirementId === id ? { ...d, guestCount } : d)),
     );
+  }
+
+  async function handleVenueSelect(address: ParsedVenueAddress) {
+    onChange({
+      venueAddress: address.formattedAddress,
+      venuePlaceId: address.placeId,
+      venueLat: address.lat,
+      venueLng: address.lng,
+      venueStreetAddress: address.streetAddress,
+      venueSuburb: address.suburb,
+      venueState: address.state,
+      venuePostcode: address.postcode,
+    });
+
+    const distance = await getDistanceFromKitchen(address.lat, address.lng);
+    if (!distance.error) {
+      onChange({
+        venueTravelDistanceKm: distance.distanceKm,
+        venueTravelDurationMinutes: distance.durationMinutes,
+      });
+    }
   }
 
   return (
@@ -139,12 +162,31 @@ export function EventDetailsSection({
         </Field>
 
         <Field label="Venue Address">
-          <input
-            type="text"
-            className={inputClass}
+          <VenueAddressAutocomplete
             value={draft.venueAddress}
-            onChange={(e) => onChange({ venueAddress: e.target.value })}
+            onChange={(venueAddress) => onChange({ venueAddress })}
+            onSelect={handleVenueSelect}
           />
+          {(draft.venueLat != null || draft.venueTravelDistanceKm != null) && (
+            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-navy-dark/60">
+              {draft.venueTravelDistanceKm != null && draft.venueTravelDurationMinutes != null && (
+                <span>
+                  ~{draft.venueTravelDistanceKm} km · ~{draft.venueTravelDurationMinutes} min from the Townsville
+                  kitchen
+                </span>
+              )}
+              {draft.venueLat != null && draft.venueLng != null && (
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${draft.venueLat},${draft.venueLng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-copper hover:underline"
+                >
+                  Open in Google Maps →
+                </a>
+              )}
+            </div>
+          )}
         </Field>
 
         <div className="col-span-full flex items-center gap-2 rounded-md border border-border-soft bg-cream p-3">
