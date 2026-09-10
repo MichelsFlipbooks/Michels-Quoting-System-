@@ -91,7 +91,7 @@ export default async function ArchivePage({
               <th className="px-4 py-3">Event Date</th>
               <th className="px-4 py-3">Quote #</th>
               <th className="px-4 py-3">Client</th>
-              <th className="px-4 py-3">Event</th>
+              <th className="px-4 py-3">Event Type</th>
               <th className="px-4 py-3">Value</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Reason</th>
@@ -110,7 +110,7 @@ export default async function ArchivePage({
                   {quote.client.contact_name}
                   {quote.client.organisation ? ` (${quote.client.organisation})` : ""}
                 </td>
-                <td className="px-4 py-3">{quote.event_name ?? "—"}</td>
+                <td className="px-4 py-3">{quote.event_type ?? "—"}</td>
                 <td className="px-4 py-3">{formatAUD(quote.totalIncGstCents)}</td>
                 <td className="px-4 py-3">
                   <StatusBadge status={quote.status} />

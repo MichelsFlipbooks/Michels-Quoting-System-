@@ -33,13 +33,21 @@ describe("computeStaffHours", () => {
   it("never goes below the minimum call-out", () => {
     expect(computeStaffHours(1)).toBe(STAFF_MIN_CALL_HOURS);
   });
+
+  it("adds a travel buffer on top of the setup/pack-down buffer", () => {
+    expect(computeStaffHours(5, 1)).toBe(7);
+  });
+
+  it("still applies the minimum call-out when duration and travel are both small", () => {
+    expect(computeStaffHours(1, 0.5)).toBe(STAFF_MIN_CALL_HOURS);
+  });
 });
 
 describe("recommendStaffing", () => {
-  it("recommends no on-site staff for Drop-off service", () => {
+  it("recommends no on-site staff for Delivery service", () => {
     expect(
       recommendStaffing({
-        serviceLevel: "Drop-off",
+        serviceLevel: "Delivery",
         guestNumbers: 100,
         beverageServiceRequired: false,
         startTime: "12:00",
@@ -51,7 +59,7 @@ describe("recommendStaffing", () => {
   it("returns no staff when there are no guests", () => {
     expect(
       recommendStaffing({
-        serviceLevel: "Served Buffet",
+        serviceLevel: "Full Service — Food Only",
         guestNumbers: 0,
         beverageServiceRequired: false,
         startTime: "18:00",
@@ -60,9 +68,9 @@ describe("recommendStaffing", () => {
     ).toEqual([]);
   });
 
-  it("scales waitstaff and chefs to guest numbers for a buffet", () => {
+  it("scales waitstaff and chefs to guest numbers for Full Service — Food Only", () => {
     const lines = recommendStaffing({
-      serviceLevel: "Served Buffet",
+      serviceLevel: "Full Service — Food Only",
       guestNumbers: 90,
       beverageServiceRequired: false,
       startTime: "18:00",
@@ -76,9 +84,9 @@ describe("recommendStaffing", () => {
     expect(lines.find((l) => l.roleName === "Head Chef")).toBeUndefined();
   });
 
-  it("assigns a Head Chef plus support chefs for Plated / Sit-Down", () => {
+  it("assigns a Head Chef plus support chefs for Serviced Food & Beverage Staff", () => {
     const lines = recommendStaffing({
-      serviceLevel: "Plated / Sit-Down",
+      serviceLevel: "Serviced Food & Beverage Staff",
       guestNumbers: 120,
       beverageServiceRequired: false,
       startTime: "18:00",
@@ -88,13 +96,13 @@ describe("recommendStaffing", () => {
     const headChef = lines.find((l) => l.roleName === "Head Chef");
     const chef = lines.find((l) => l.roleName === "Chef");
     expect(headChef?.staffCount).toBe(1);
-    // ceil(120/30) = 4 total chefs, minus the 1 head chef = 3 support chefs
-    expect(chef?.staffCount).toBe(3);
+    // ceil(120/25) = 5 total chefs, minus the 1 head chef = 4 support chefs
+    expect(chef?.staffCount).toBe(4);
   });
 
   it("adds a bartender when beverage service is required, scaled to guest numbers", () => {
     const lines = recommendStaffing({
-      serviceLevel: "Canape / Cocktail",
+      serviceLevel: "Full Service — Food & Beverage",
       guestNumbers: 160,
       beverageServiceRequired: true,
       startTime: "17:00",
@@ -107,7 +115,7 @@ describe("recommendStaffing", () => {
 
   it("omits a bartender entirely when beverage service is not required", () => {
     const lines = recommendStaffing({
-      serviceLevel: "Canape / Cocktail",
+      serviceLevel: "Full Service — Food & Beverage",
       guestNumbers: 160,
       beverageServiceRequired: false,
       startTime: "17:00",
@@ -118,14 +126,14 @@ describe("recommendStaffing", () => {
 
   it("adds an Event Supervisor once guest numbers reach the threshold", () => {
     const small = recommendStaffing({
-      serviceLevel: "Served Buffet",
+      serviceLevel: "Full Service — Food Only",
       guestNumbers: 79,
       beverageServiceRequired: false,
       startTime: "18:00",
       finishTime: "22:00",
     });
     const large = recommendStaffing({
-      serviceLevel: "Served Buffet",
+      serviceLevel: "Full Service — Food Only",
       guestNumbers: 80,
       beverageServiceRequired: false,
       startTime: "18:00",
@@ -137,7 +145,7 @@ describe("recommendStaffing", () => {
 
   it("always recommends at least one chef and one waiter even for very small guest counts", () => {
     const lines = recommendStaffing({
-      serviceLevel: "Served Buffet",
+      serviceLevel: "Full Service — Food Only",
       guestNumbers: 5,
       beverageServiceRequired: false,
       startTime: "18:00",
@@ -145,5 +153,19 @@ describe("recommendStaffing", () => {
     });
     expect(lines.find((l) => l.roleName === "Chef")?.staffCount).toBe(1);
     expect(lines.find((l) => l.roleName === "Waitstaff")?.staffCount).toBe(1);
+  });
+
+  it("extends every staff line's hours to cover round-trip travel time", () => {
+    const lines = recommendStaffing({
+      serviceLevel: "Full Service — Food Only",
+      guestNumbers: 90,
+      beverageServiceRequired: false,
+      startTime: "18:00",
+      finishTime: "22:00", // 4hr event + 1hr setup/packdown = 5hr base call
+      travelMinutesEachWay: 45, // 1.5hr round trip
+    });
+
+    const waitstaff = lines.find((l) => l.roleName === "Waitstaff");
+    expect(waitstaff?.hours).toBe(6.5);
   });
 });

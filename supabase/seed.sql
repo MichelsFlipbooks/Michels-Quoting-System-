@@ -121,3 +121,38 @@ insert into package_menu_selections (package_id, catalogue_item_id, is_optional_
 select pkg.id, ci.id, true, 6500, 6
 from pkg, catalogue_items ci
 where ci.name = 'Seasonal Fruit Platter' and ci.category = 'food';
+
+-- ============================================================================
+-- SAMPLE BEVERAGE PACKAGE — Classic Beverage Package (4-hour house selection)
+-- ============================================================================
+with pkg as (
+  insert into catering_packages (name, description, category, pricing_type, price_per_guest_cents)
+  values (
+    'Classic Beverage Package',
+    'House sparkling, white, red, craft beer, soft drinks and juice for 4 hours, priced per person.',
+    'beverage',
+    'per_guest',
+    4500
+  )
+  returning id
+)
+insert into package_menu_selections (package_id, catalogue_item_id, is_optional_addon, sort_order)
+select pkg.id, ci.id, false, sel.ordinal
+from pkg,
+  (values
+    ('House Sparkling', 1),
+    ('House White', 2),
+    ('House Red', 3),
+    ('Local Craft Beer', 4),
+    ('Soft Drinks & Juice', 5)
+  ) as sel(name, ordinal)
+  join catalogue_items ci on ci.name = sel.name and ci.category = 'beverage';
+
+-- Optional add-on: barista coffee service, priced separately.
+with pkg as (
+  select id from catering_packages where name = 'Classic Beverage Package'
+)
+insert into package_menu_selections (package_id, catalogue_item_id, is_optional_addon, addon_price_cents, sort_order)
+select pkg.id, ci.id, true, 800, 6
+from pkg, catalogue_items ci
+where ci.name = 'Barista Coffee Service' and ci.category = 'beverage';

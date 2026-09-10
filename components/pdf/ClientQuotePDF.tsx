@@ -9,8 +9,6 @@ import { pdfStyles as s } from "./styles";
 const LOGO_PATH = path.join(process.cwd(), "public", "brand", "michels-logo-navy.png");
 
 const SECTION_ORDER: { key: QuoteLineItem["section"]; label: string }[] = [
-  { key: "food", label: "Food & Menu" },
-  { key: "beverage", label: "Beverages" },
   { key: "equipment", label: "Equipment" },
   { key: "delivery_travel", label: "Delivery & Travel" },
   { key: "additional_charge", label: "Optional Additions & Charges" },
@@ -92,8 +90,10 @@ export function ClientQuotePDF({
           </View>
           <View style={s.col}>
             <Text style={s.h2}>Event Details</Text>
-            <Text style={s.label}>Event</Text>
-            <Text style={s.value}>{quote.event_name ?? "—"} ({quote.event_type ?? "—"})</Text>
+            <Text style={s.label}>Event Type</Text>
+            <Text style={s.value}>{quote.event_type ?? "—"}</Text>
+            <Text style={s.label}>Service Level</Text>
+            <Text style={s.value}>{quote.service_level ?? "—"}</Text>
             <Text style={s.label}>Date & Time</Text>
             <Text style={s.value}>
               {quote.event_date ? formatAustralianDateLong(quote.event_date) : "—"}
@@ -108,6 +108,62 @@ export function ClientQuotePDF({
             <Text style={s.value}>{quote.guest_numbers ?? "—"}</Text>
           </View>
         </View>
+
+        {quote.event_type === "Corporate" && (quote.business_name || quote.business_address) && (
+          <View wrap={false}>
+            <Text style={s.h2}>Business Details</Text>
+            {quote.business_name && (
+              <>
+                <Text style={s.label}>Business Name</Text>
+                <Text style={s.value}>{quote.business_name}</Text>
+              </>
+            )}
+            {quote.business_address && (
+              <>
+                <Text style={s.label}>Business Address</Text>
+                <Text style={s.value}>{quote.business_address}</Text>
+              </>
+            )}
+          </View>
+        )}
+
+        {quote.service_level === "Delivery" &&
+          (quote.delivery_address || quote.delivery_time || quote.delivery_contact) && (
+            <View wrap={false}>
+              <Text style={s.h2}>Delivery Details</Text>
+              {quote.delivery_address && (
+                <>
+                  <Text style={s.label}>Delivery Address</Text>
+                  <Text style={s.value}>{quote.delivery_address}</Text>
+                </>
+              )}
+              {quote.delivery_time && (
+                <>
+                  <Text style={s.label}>Delivery Time</Text>
+                  <Text style={s.value}>{formatAustralianTime(quote.delivery_time)}</Text>
+                </>
+              )}
+              {quote.delivery_contact && (
+                <>
+                  <Text style={s.label}>Delivery Contact</Text>
+                  <Text style={s.value}>{quote.delivery_contact}</Text>
+                </>
+              )}
+            </View>
+          )}
+
+        {(() => {
+          const foodItems = lineItems.filter((li) => li.section === "food");
+          const beverageItems = lineItems.filter((li) => li.section === "beverage");
+          if (foodItems.length === 0 && beverageItems.length === 0) return null;
+          return (
+            <View wrap={false}>
+              <Text style={s.h2}>Food and Beverage</Text>
+              {foodItems.length > 0 && <LineItemsTable items={foodItems} />}
+              {beverageItems.length > 0 && <LineItemsTable items={beverageItems} />}
+            </View>
+          );
+        })()}
 
         {SECTION_ORDER.map(({ key, label }) => {
           const items = lineItems.filter((li) => li.section === key);

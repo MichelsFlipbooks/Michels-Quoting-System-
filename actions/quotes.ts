@@ -39,7 +39,6 @@ export interface SaveTimelineInput {
 export interface SaveQuoteInput {
   id: string | null;
   clientId: string;
-  eventName: string | null;
   eventType: string | null;
   serviceLevel: string | null;
   eventDate: string | null;
@@ -48,6 +47,12 @@ export interface SaveQuoteInput {
   venueName: string | null;
   venueAddress: string | null;
   guestNumbers: number | null;
+  businessName: string | null;
+  businessAddress: string | null;
+  deliveryAddress: string | null;
+  deliveryTime: string | null;
+  deliveryContact: string | null;
+  kitchenDepartureTime: string | null;
   eventContactName: string | null;
   eventContactPhone: string | null;
   eventContactEmail: string | null;
@@ -131,7 +136,6 @@ export async function saveQuoteDraft(input: SaveQuoteInput): Promise<{ quote?: Q
 
   const quoteFields = {
     client_id: input.clientId,
-    event_name: input.eventName,
     event_type: input.eventType,
     service_level: input.serviceLevel,
     event_date: input.eventDate,
@@ -140,6 +144,12 @@ export async function saveQuoteDraft(input: SaveQuoteInput): Promise<{ quote?: Q
     venue_name: input.venueName,
     venue_address: input.venueAddress,
     guest_numbers: input.guestNumbers,
+    business_name: input.businessName,
+    business_address: input.businessAddress,
+    delivery_address: input.deliveryAddress,
+    delivery_time: input.deliveryTime,
+    delivery_contact: input.deliveryContact,
+    kitchen_departure_time: input.kitchenDepartureTime,
     event_contact_name: input.eventContactName,
     event_contact_phone: input.eventContactPhone,
     event_contact_email: input.eventContactEmail,

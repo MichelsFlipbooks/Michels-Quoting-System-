@@ -27,7 +27,7 @@ export function ConfirmedEventsList({ groups }: { groups: ConfirmedEventGroup[] 
                     <div>
                       <p className="font-semibold text-navy-dark">{formatAustralianDateLong(event.event_date)}</p>
                       <p className="text-sm text-navy-dark/70">
-                        {event.event_name ?? "Untitled Event"} — {event.client.contact_name}
+                        {event.client.contact_name}
                         {event.client.organisation ? ` (${event.client.organisation})` : ""}
                       </p>
                       <p className="text-xs text-navy-dark/50">

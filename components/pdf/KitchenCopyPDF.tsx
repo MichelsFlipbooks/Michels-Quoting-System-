@@ -70,6 +70,21 @@ export function KitchenCopyPDF({
         <Text style={s.value}>Parking / Loading: {quote.parking_loading_details || "—"}</Text>
         <Text style={s.value}>Kitchen Facilities: {quote.kitchen_facilities || "—"}</Text>
 
+        {quote.service_level === "Delivery" && (
+          <View wrap={false}>
+            <Text style={s.h2}>Delivery Details</Text>
+            <Text style={s.value}>Delivery Address: {quote.delivery_address || "—"}</Text>
+            <Text style={s.value}>
+              Delivery Time: {quote.delivery_time ? formatAustralianTime(quote.delivery_time) : "—"}
+            </Text>
+            <Text style={s.value}>Delivery Contact: {quote.delivery_contact || "—"}</Text>
+            <Text style={[s.value, { fontWeight: 700 }]}>
+              Time to Leave Kitchen:{" "}
+              {quote.kitchen_departure_time ? formatAustralianTime(quote.kitchen_departure_time) : "—"}
+            </Text>
+          </View>
+        )}
+
         {dietary.length > 0 && (
           <View>
             <Text style={s.h2}>Dietary Requirements</Text>

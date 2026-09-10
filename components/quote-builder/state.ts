@@ -49,7 +49,6 @@ export interface QuoteDraft {
   /** id === "" means this client hasn't been saved to the database yet. */
   client: Client;
 
-  eventName: string;
   eventType: string;
   serviceLevel: string;
   eventDate: string;
@@ -58,6 +57,12 @@ export interface QuoteDraft {
   venueName: string;
   venueAddress: string;
   guestNumbers: number | null;
+  businessName: string;
+  businessAddress: string;
+  deliveryAddress: string;
+  deliveryTime: string;
+  deliveryContact: string;
+  kitchenDepartureTime: string;
   eventContactName: string;
   eventContactPhone: string;
   eventContactEmail: string;
@@ -195,7 +200,6 @@ export function createEmptyDraft(initialClient: Client | null): QuoteDraft {
     statusReason: null,
     currentVersionNumber: 0,
     client: initialClient ?? blankClient(),
-    eventName: "",
     eventType: "",
     serviceLevel: "",
     eventDate: "",
@@ -204,6 +208,12 @@ export function createEmptyDraft(initialClient: Client | null): QuoteDraft {
     venueName: "",
     venueAddress: "",
     guestNumbers: null,
+    businessName: "",
+    businessAddress: "",
+    deliveryAddress: "",
+    deliveryTime: "",
+    deliveryContact: "",
+    kitchenDepartureTime: "",
     eventContactName: "",
     eventContactPhone: "",
     eventContactEmail: "",
@@ -287,7 +297,6 @@ export function draftFromExisting(
     statusReason: quote.status_reason,
     currentVersionNumber: quote.current_version_number,
     client,
-    eventName: quote.event_name ?? "",
     eventType: quote.event_type ?? "",
     serviceLevel: quote.service_level ?? "",
     eventDate: quote.event_date ?? "",
@@ -296,6 +305,12 @@ export function draftFromExisting(
     venueName: quote.venue_name ?? "",
     venueAddress: quote.venue_address ?? "",
     guestNumbers: quote.guest_numbers,
+    businessName: quote.business_name ?? "",
+    businessAddress: quote.business_address ?? "",
+    deliveryAddress: quote.delivery_address ?? "",
+    deliveryTime: quote.delivery_time ?? "",
+    deliveryContact: quote.delivery_contact ?? "",
+    kitchenDepartureTime: quote.kitchen_departure_time ?? "",
     eventContactName: quote.event_contact_name ?? "",
     eventContactPhone: quote.event_contact_phone ?? "",
     eventContactEmail: quote.event_contact_email ?? "",
