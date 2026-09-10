@@ -1,23 +1,14 @@
-export const EVENT_TYPES = [
-  "Wedding",
-  "Corporate Event",
-  "Private Party",
-  "Cocktail Function",
-  "Gala / Fundraiser",
-  "Christmas Party",
-  "Birthday",
-  "Funeral / Wake",
-  "Other",
-] as const;
+export const EVENT_TYPES = ["Private", "Corporate", "Wedding"] as const;
 
 export const SERVICE_LEVELS = [
-  "Drop-off",
-  "Self-Service Buffet",
-  "Served Buffet",
-  "Plated / Sit-Down",
-  "Canape / Cocktail",
-  "Full-Service Staffed",
+  "Delivery",
+  "Full Service — Food Only",
+  "Full Service — Food & Beverage",
+  "Serviced Food & Beverage Staff",
 ] as const;
+
+export const PACKAGE_CATEGORIES = ["food", "beverage"] as const;
+export type PackageCategory = (typeof PACKAGE_CATEGORIES)[number];
 
 export const QUOTE_STATUSES = [
   "enquiry",

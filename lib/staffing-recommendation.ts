@@ -16,6 +16,8 @@ export interface StaffingRecommendationInput {
   startTime: string | null;
   /** 24-hour "HH:MM" or "HH:MM:SS" */
   finishTime: string | null;
+  /** One-way travel time from the kitchen to the venue, in minutes. */
+  travelMinutesEachWay?: number | null;
 }
 
 export interface RecommendedStaffLine {
@@ -42,9 +44,15 @@ export function computeEventDurationHours(startTime: string | null, finishTime: 
   return Math.round(duration * 4) / 4; // nearest quarter hour
 }
 
-/** Staff call length: event duration plus a setup/pack-down buffer, with a minimum call-out. */
-export function computeStaffHours(durationHours: number): number {
-  return Math.max(durationHours + STAFF_SETUP_PACKDOWN_BUFFER_HOURS, STAFF_MIN_CALL_HOURS);
+/**
+ * Staff call length: event duration plus a setup/pack-down buffer plus any
+ * round-trip travel time to/from the venue, with a minimum call-out.
+ */
+export function computeStaffHours(durationHours: number, travelBufferHours = 0): number {
+  return Math.max(
+    durationHours + STAFF_SETUP_PACKDOWN_BUFFER_HOURS + travelBufferHours,
+    STAFF_MIN_CALL_HOURS,
+  );
 }
 
 interface ServiceLevelRules {
@@ -54,24 +62,23 @@ interface ServiceLevelRules {
 }
 
 const SERVICE_LEVEL_RULES: Record<string, ServiceLevelRules> = {
-  "Drop-off": { guestsPerWaiter: null, guestsPerChef: 0, headChef: false },
-  "Self-Service Buffet": { guestsPerWaiter: 25, guestsPerChef: 40, headChef: false },
-  "Served Buffet": { guestsPerWaiter: 18, guestsPerChef: 40, headChef: false },
-  "Canape / Cocktail": { guestsPerWaiter: 20, guestsPerChef: 35, headChef: false },
-  "Plated / Sit-Down": { guestsPerWaiter: 12, guestsPerChef: 30, headChef: true },
-  "Full-Service Staffed": { guestsPerWaiter: 10, guestsPerChef: 25, headChef: true },
+  Delivery: { guestsPerWaiter: null, guestsPerChef: 0, headChef: false },
+  "Full Service — Food Only": { guestsPerWaiter: 18, guestsPerChef: 40, headChef: false },
+  "Full Service — Food & Beverage": { guestsPerWaiter: 15, guestsPerChef: 35, headChef: false },
+  "Serviced Food & Beverage Staff": { guestsPerWaiter: 10, guestsPerChef: 25, headChef: true },
 };
 
 const DEFAULT_RULES: ServiceLevelRules = { guestsPerWaiter: 15, guestsPerChef: 35, headChef: false };
 
 export function recommendStaffing(input: StaffingRecommendationInput): RecommendedStaffLine[] {
-  const { serviceLevel, guestNumbers, beverageServiceRequired, startTime, finishTime } = input;
+  const { serviceLevel, guestNumbers, beverageServiceRequired, startTime, finishTime, travelMinutesEachWay } = input;
 
   if (!guestNumbers || guestNumbers <= 0) return [];
 
   const rules = SERVICE_LEVEL_RULES[serviceLevel] ?? DEFAULT_RULES;
   const durationHours = computeEventDurationHours(startTime, finishTime);
-  const hours = computeStaffHours(durationHours);
+  const travelBufferHours = travelMinutesEachWay ? (travelMinutesEachWay * 2) / 60 : 0;
+  const hours = computeStaffHours(durationHours, travelBufferHours);
 
   const lines: RecommendedStaffLine[] = [];
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatAUD } from "@/lib/format";
+import type { LineItemSection as SectionKey } from "@/lib/constants";
 import type { PackageWithSelections } from "@/lib/queries";
 import { newLineItem, type DraftLineItem } from "./state";
 
@@ -10,26 +11,32 @@ const inputClass =
 
 export function PackagePicker({
   packages,
+  category,
+  heading = "Catering Packages",
   guestNumbers,
   lineItems,
   onChange,
 }: {
   packages: PackageWithSelections[];
+  category: "food" | "beverage";
+  heading?: string;
   guestNumbers: number | null;
   lineItems: DraftLineItem[];
   onChange: (items: DraftLineItem[]) => void;
 }) {
   const [choice, setChoice] = useState("");
+  const section: SectionKey = category;
+  const categoryPackages = packages.filter((p) => p.category === category);
 
   function addPackage() {
-    const pkg = packages.find((p) => p.id === choice);
+    const pkg = categoryPackages.find((p) => p.id === choice);
     if (!pkg) return;
 
     const guests = guestNumbers && guestNumbers > 0 ? guestNumbers : 1;
-    const maxOrder = Math.max(0, ...lineItems.filter((li) => li.section === "food").map((li) => li.sort_order));
+    const maxOrder = Math.max(0, ...lineItems.filter((li) => li.section === section).map((li) => li.sort_order));
 
     const packageLine = newLineItem({
-      section: "food",
+      section,
       line_type: "package",
       package_id: pkg.id,
       description: pkg.name,
@@ -44,7 +51,7 @@ export function PackagePicker({
       .filter((sel) => !sel.is_optional_addon)
       .map((sel, idx) =>
         newLineItem({
-          section: "food",
+          section,
           line_type: "package",
           package_id: pkg.id,
           description: sel.catalogue_item?.name ?? sel.custom_name ?? "Included item",
@@ -63,11 +70,11 @@ export function PackagePicker({
   }
 
   function addAddon(pkg: PackageWithSelections, selection: PackageWithSelections["selections"][number]) {
-    const maxOrder = Math.max(0, ...lineItems.filter((li) => li.section === "food").map((li) => li.sort_order));
+    const maxOrder = Math.max(0, ...lineItems.filter((li) => li.section === section).map((li) => li.sort_order));
     onChange([
       ...lineItems,
       newLineItem({
-        section: "food",
+        section,
         line_type: "package",
         package_id: pkg.id,
         description: `${selection.catalogue_item?.name ?? selection.custom_name} (add-on)`,
@@ -82,15 +89,15 @@ export function PackagePicker({
     ]);
   }
 
-  const selectedPackage = packages.find((p) => p.id === choice);
+  const selectedPackage = categoryPackages.find((p) => p.id === choice);
 
   return (
     <div className="mb-6 rounded-lg border border-copper/30 bg-copper/5 p-4">
-      <h3 className="mb-2 text-sm font-semibold text-navy-dark">Catering Packages</h3>
+      <h3 className="mb-2 text-sm font-semibold text-navy-dark">{heading}</h3>
       <div className="flex flex-wrap items-center gap-2">
         <select className={`${inputClass} max-w-xs`} value={choice} onChange={(e) => setChoice(e.target.value)}>
           <option value="">Select a package…</option>
-          {packages.map((pkg) => (
+          {categoryPackages.map((pkg) => (
             <option key={pkg.id} value={pkg.id}>
               {pkg.name} —{" "}
               {pkg.pricing_type === "per_guest"
@@ -136,11 +143,11 @@ export function PackagePicker({
         </div>
       )}
 
-      {lineItems.some((li) => li.package_id) && (
+      {lineItems.some((li) => li.package_id && li.section === section) && (
         <div className="mt-4 border-t border-copper/20 pt-3">
           <p className="mb-2 text-sm font-medium text-navy-dark">Add an optional add-on to a package already on this quote:</p>
           <div className="flex flex-wrap gap-2">
-            {packages
+            {categoryPackages
               .filter((pkg) => lineItems.some((li) => li.package_id === pkg.id && !li.is_included_selection && !li.is_addon))
               .flatMap((pkg) =>
                 pkg.selections

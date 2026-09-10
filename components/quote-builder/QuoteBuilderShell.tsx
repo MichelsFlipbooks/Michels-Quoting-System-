@@ -9,11 +9,9 @@ import { issueQuoteVersion } from "@/actions/versions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { CatalogueItem, Client, DietaryRequirement, StaffMember } from "@/lib/types";
 import type { PackageWithSelections } from "@/lib/queries";
-import { CustomerSection } from "./CustomerSection";
-import { DeliveryTravelSection } from "./DeliveryTravelSection";
-import { EventDetailsSection } from "./EventDetailsSection";
+import { CustomerEventSection } from "./CustomerEventSection";
+import { FoodAndBeverageSection } from "./FoodAndBeverageSection";
 import { LineItemSection } from "./LineItemSection";
-import { PackagePicker } from "./PackagePicker";
 import { StaffingSection } from "./StaffingSection";
 import { SummarySection } from "./SummarySection";
 import { NotesSection } from "./NotesSection";
@@ -22,13 +20,10 @@ import { TrackingSection } from "./TrackingSection";
 import type { QuoteDraft } from "./state";
 
 const TABS = [
-  "Customer",
-  "Event Details",
-  "Food & Menu",
-  "Beverages",
+  "Customer & Event Details",
+  "Food and Beverage",
   "Staffing",
   "Equipment",
-  "Delivery & Travel",
   "Additional Charges",
   "Summary",
   "Tracking",
@@ -50,7 +45,7 @@ export function QuoteBuilderShell({
   staffMembers: StaffMember[];
 }) {
   const [draft, setDraft] = useState<QuoteDraft>(initialDraft);
-  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Customer");
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]>("Customer & Event Details");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [isSaving, startSaving] = useTransition();
@@ -76,7 +71,7 @@ export function QuoteBuilderShell({
 
     if (!draft.client.contact_name.trim()) {
       setSaveError("Please enter the customer's contact name before saving.");
-      setActiveTab("Customer");
+      setActiveTab("Customer & Event Details");
       return;
     }
 
@@ -116,7 +111,6 @@ export function QuoteBuilderShell({
       const result = await saveQuoteDraft({
         id: draft.id,
         clientId,
-        eventName: draft.eventName || null,
         eventType: draft.eventType || null,
         serviceLevel: draft.serviceLevel || null,
         eventDate: draft.eventDate || null,
@@ -125,6 +119,12 @@ export function QuoteBuilderShell({
         venueName: draft.venueName || null,
         venueAddress: draft.venueAddress || null,
         guestNumbers: draft.guestNumbers,
+        businessName: draft.businessName || null,
+        businessAddress: draft.businessAddress || null,
+        deliveryAddress: draft.deliveryAddress || null,
+        deliveryTime: draft.deliveryTime || null,
+        deliveryContact: draft.deliveryContact || null,
+        kitchenDepartureTime: draft.kitchenDepartureTime || null,
         // When linked to the client contact, always re-copy the latest client
         // fields at save time so the quote row stays self-contained for the
         // PDF/kitchen-copy renderers.
@@ -343,53 +343,29 @@ export function QuoteBuilderShell({
         ))}
       </div>
 
-      {activeTab === "Customer" && (
-        <CustomerSection
-          client={draft.client}
-          onChange={patchClient}
-          onMatchedExistingClient={handleMatchedExistingClient}
-        />
-      )}
-
-      {activeTab === "Event Details" && (
-        <EventDetailsSection
+      {activeTab === "Customer & Event Details" && (
+        <CustomerEventSection
           draft={draft}
           onChange={patch}
-          dietaryOptions={dietaryOptions}
-          onDietaryChange={(dietaryRequirements) => patch({ dietaryRequirements })}
+          onChangeClient={patchClient}
+          onMatchedExistingClient={handleMatchedExistingClient}
+          catalogueItems={catalogueItems}
+          onLineItemsChange={setLineItems}
           onTimelineChange={(timelineItems) => patch({ timelineItems })}
         />
       )}
 
-      {activeTab === "Food & Menu" && (
-        <div className="rounded-xl border border-border-soft bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-navy-dark">Food & Menu</h2>
-          <PackagePicker
-            packages={packages}
-            guestNumbers={draft.guestNumbers}
-            lineItems={draft.lineItems}
-            onChange={setLineItems}
-          />
-          <LineItemSection
-            section="food"
-            lineItems={draft.lineItems}
-            catalogueItems={catalogueItems}
-            onChange={setLineItems}
-            title="All Food & Menu Lines"
-            helperText="Packages, included selections, add-ons, and custom food lines all appear here — reorder and edit freely."
-          />
-        </div>
-      )}
-
-      {activeTab === "Beverages" && (
-        <div className="rounded-xl border border-border-soft bg-white p-6 shadow-sm">
-          <LineItemSection
-            section="beverage"
-            lineItems={draft.lineItems}
-            catalogueItems={catalogueItems}
-            onChange={setLineItems}
-          />
-        </div>
+      {activeTab === "Food and Beverage" && (
+        <FoodAndBeverageSection
+          packages={packages}
+          catalogueItems={catalogueItems}
+          guestNumbers={draft.guestNumbers}
+          lineItems={draft.lineItems}
+          onChange={setLineItems}
+          dietaryOptions={dietaryOptions}
+          dietaryRequirements={draft.dietaryRequirements}
+          onDietaryChange={(dietaryRequirements) => patch({ dietaryRequirements })}
+        />
       )}
 
       {activeTab === "Staffing" && (
@@ -401,6 +377,9 @@ export function QuoteBuilderShell({
           guestNumbers={draft.guestNumbers}
           startTime={draft.startTime}
           finishTime={draft.finishTime}
+          travelMinutesEachWay={draft.staffTravelTimeMinutes}
+          venueTravelDurationMinutes={draft.venueTravelDurationMinutes}
+          onTravelMinutesChange={(staffTravelTimeMinutes) => patch({ staffTravelTimeMinutes })}
         />
       )}
 
@@ -412,22 +391,6 @@ export function QuoteBuilderShell({
             catalogueItems={catalogueItems}
             onChange={setLineItems}
           />
-        </div>
-      )}
-
-      {activeTab === "Delivery & Travel" && (
-        <div className="space-y-6">
-          <DeliveryTravelSection draft={draft} onChange={patch} />
-          <div className="rounded-xl border border-border-soft bg-white p-6 shadow-sm">
-            <LineItemSection
-              section="delivery_travel"
-              lineItems={draft.lineItems}
-              catalogueItems={catalogueItems}
-              onChange={setLineItems}
-              title="Delivery & Travel Charges"
-              helperText="Add priced lines here (e.g. Local Delivery Fee, Remote Delivery Fee) — these feed the quote total."
-            />
-          </div>
         </div>
       )}
 

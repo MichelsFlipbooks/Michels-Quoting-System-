@@ -57,6 +57,7 @@ export interface CateringPackage {
   id: string;
   name: string;
   description: string | null;
+  category: "food" | "beverage";
   pricing_type: "per_guest" | "fixed";
   price_per_guest_cents: number | null;
   fixed_price_cents: number | null;
@@ -103,6 +104,12 @@ export interface Quote {
   venue_name: string | null;
   venue_address: string | null;
   guest_numbers: number | null;
+  business_name: string | null;
+  business_address: string | null;
+  delivery_address: string | null;
+  delivery_time: string | null;
+  delivery_contact: string | null;
+  kitchen_departure_time: string | null;
   event_contact_name: string | null;
   event_contact_phone: string | null;
   event_contact_email: string | null;
